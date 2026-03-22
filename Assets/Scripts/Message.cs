@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class Message : MonoBehaviour
 {
-
     private void Start()
     {
         GameManager.instance.Message += UpdateMessage;
@@ -25,9 +25,7 @@ public class Message : MonoBehaviour
                 break;
             case Constants.FINISHED:
                 myText.text = player == Player.RED ? "Blue Wins" : "Red Wins";
-                myText.color = player == Player.RED ? Color.blue: Color.red;
-                break;
-            default:
+                myText.color = player == Player.RED ? Color.blue : Color.red;
                 break;
         }
     }

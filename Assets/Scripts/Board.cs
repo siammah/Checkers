@@ -4,31 +4,13 @@ using UnityEngine;
 
 public class Board
 {
-
     public Dictionary<GamePiece, Grid> playerPositions;
     public Dictionary<GamePiece, List<Moves>> playerMoves;
     public bool isCapturedMove;
 
-    readonly List<Grid> kingDirections = new List<Grid>()
-    {
-        new Grid() { x = 1,y = 1 },
-        new Grid() { x = 1,y = -1 },
-        new Grid() { x = -1,y = 1 },
-        new Grid() { x = -1,y = -1 }
-    };
-
-    readonly List<Grid> redDirections = new List<Grid>()
-    {
-        new Grid() { x = 1,y = 1 },
-        new Grid() { x = -1,y = 1 }
-    };
-
-    readonly List<Grid> blueDirections = new List<Grid>()
-    {
-        new Grid() { x = 1,y = -1 },
-        new Grid() { x = -1,y = -1 }
-    };
-
+    readonly List<Grid> kingDirections = new List<Grid>() { new Grid() { x = 1, y = 1 }, new Grid() { x = 1, y = -1 }, new Grid() { x = -1, y = 1 }, new Grid() { x = -1, y = -1 } };
+    readonly List<Grid> redDirections = new List<Grid>() { new Grid() { x = 1, y = 1 }, new Grid() { x = -1, y = 1 } };
+    readonly List<Grid> blueDirections = new List<Grid>() { new Grid() { x = 1, y = -1 }, new Grid() { x = -1, y = -1 } };
 
     public Board()
     {
@@ -43,8 +25,8 @@ public class Board
             for (int j = 0; j < 12; j++)
             {
                 GamePiece current = new GamePiece((Player)i, j);
-                int x = (j * 2) % 8 + 1 - (j > 3 && j < 8 && i == 0?1:0) -(!(j > 3 && j < 8) && i == 1 ? 1 : 0);
-                int y = (j/4) + (i == 1 ? 5 : 0);
+                int x = (j * 2) % 8 + 1 - (j > 3 && j < 8 && i == 0 ? 1 : 0) - (!(j > 3 && j < 8) && i == 1 ? 1 : 0);
+                int y = (j / 4) + (i == 1 ? 5 : 0);
                 Grid tempGrid = new Grid() { x = x, y = y };
                 playerPositions[current] = tempGrid;
             }
@@ -71,19 +53,18 @@ public class Board
             foreach (Grid tempDirection in currentPieceDirection)
             {
                 Grid toCheck = new Grid() { x = tempDirection.x + itemGrid.x, y = tempDirection.y + itemGrid.y };
-                if(IsValidGrid(toCheck) && GetPieceAtGrid(toCheck).pieceNumber != -1 && 
+                if (IsValidGrid(toCheck) && GetPieceAtGrid(toCheck).pieceNumber != -1 &&
                     GetPieceAtGrid(toCheck).player != currentPlayer)
                 {
                     Grid doubleCheck = new Grid() { x = tempDirection.x + toCheck.x, y = tempDirection.y + toCheck.y };
-                    if(IsValidGrid(doubleCheck) && GetPieceAtGrid(doubleCheck).pieceNumber == -1)
+                    if (IsValidGrid(doubleCheck) && GetPieceAtGrid(doubleCheck).pieceNumber == -1)
                     {
-                        Moves tempMove = new Moves() { start = itemGrid, end = doubleCheck, 
-                            isCapture = true, capturedPiece = GetPieceAtGrid(toCheck) };
+                        Moves tempMove = new Moves() { start = itemGrid, end = doubleCheck, isCapture = true, capturedPiece = GetPieceAtGrid(toCheck) };
                         tempMoves.Add(tempMove);
                         isCapturedMove = true;
                     }
                 }
-                else if(IsValidGrid(toCheck) && GetPieceAtGrid(toCheck).pieceNumber == -1)
+                else if (IsValidGrid(toCheck) && GetPieceAtGrid(toCheck).pieceNumber == -1)
                 {
                     Moves tempMove = new Moves() { start = itemGrid, end = toCheck, isCapture = false };
                     tempMoves.Add(tempMove);
@@ -96,26 +77,24 @@ public class Board
             }
         }
 
-        if(isCapturedMove)
+        if (isCapturedMove)
         {
             Dictionary<GamePiece, List<Moves>> tempDictionary = new Dictionary<GamePiece, List<Moves>>();
-
             foreach (var item in playerMoves)
             {
                 List<Moves> tempMoves = new List<Moves>();
                 foreach (var move in item.Value)
                 {
-                    if(move.isCapture)
+                    if (move.isCapture)
                     {
                         tempMoves.Add(move);
                     }
                 }
-                if(tempMoves.Count > 0)
+                if (tempMoves.Count > 0)
                 {
-                    tempDictionary[item.Key] = tempMoves;  
+                    tempDictionary[item.Key] = tempMoves;
                 }
             }
-
             playerMoves = tempDictionary;
         }
     }
@@ -124,19 +103,19 @@ public class Board
     {
         foreach (var item in playerPositions)
         {
-            if(item.Value.x == passedPosition.x && item.Value.y == passedPosition.y)
+            if (item.Value.x == passedPosition.x && item.Value.y == passedPosition.y)
             {
                 return item.Key;
             }
         }
-        return new GamePiece(Player.RED,-1);
+        return new GamePiece(Player.RED, -1);
     }
 
     public void UpdateMove(Moves move)
     {
         GamePiece selected = GetPieceAtGrid(move.start);
         playerPositions[selected] = move.end;
-        if(move.isCapture)
+        if (move.isCapture)
         {
             playerPositions.Remove(move.capturedPiece);
         }
@@ -149,10 +128,61 @@ public class Board
         kingPiece.pieceType = Constants.KING_PIECE;
         playerPositions[kingPiece] = currentPlayerPos;
     }
-         
 
     public static bool IsValidGrid(Grid temp)
     {
         return temp.x >= 0 && temp.x < 8 && temp.y >= 0 && temp.y < 8;
+    }
+
+    public Board(Board other)
+    {
+        playerPositions = new Dictionary<GamePiece, Grid>();
+        foreach (var item in other.playerPositions)
+        {
+            GamePiece oldPiece = item.Key;
+            Grid oldGrid = item.Value;
+            GamePiece newPiece = new GamePiece(oldPiece.player, oldPiece.pieceNumber);
+            newPiece.pieceType = oldPiece.pieceType;
+            playerPositions[newPiece] = oldGrid;
+        }
+        playerMoves = new Dictionary<GamePiece, List<Moves>>();
+        isCapturedMove = false;
+    }
+
+    public void SimulateMove(Moves move)
+    {
+        GamePiece selected = GetPieceAtGrid(move.start);
+        playerPositions[selected] = move.end;
+        if (move.isCapture)
+        {
+            Grid jumpedGrid = new Grid() { x = (move.start.x + move.end.x) / 2, y = (move.start.y + move.end.y) / 2 };
+            GamePiece jumpedPiece = GetPieceAtGrid(jumpedGrid);
+            if (jumpedPiece.pieceNumber != -1)
+            {
+                playerPositions.Remove(jumpedPiece);
+            }
+        }
+        if (move.end.y == 7 && selected.player == Player.RED && selected.pieceType != Constants.KING_PIECE)
+        {
+            UpgradePiece(selected);
+        }
+        else if (move.end.y == 0 && selected.player == Player.BLUE && selected.pieceType != Constants.KING_PIECE)
+        {
+            UpgradePiece(selected);
+        }
+    }
+
+    public List<Moves> GetAllMoves(Player player)
+    {
+        CalculateMoves(player);
+        List<Moves> allMoves = new List<Moves>();
+        foreach (var item in playerMoves)
+        {
+            foreach (Moves move in item.Value)
+            {
+                allMoves.Add(move);
+            }
+        }
+        return allMoves;
     }
 }
