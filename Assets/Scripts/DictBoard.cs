@@ -18,7 +18,7 @@ public class DictBoard
 
     public int GetPiecePos(Grid g)
     {
-        return g.x * 4 + g.y;
+        return g.y * 4 + g.x / 2;
     }
     public char GetPieceType(GamePiece p)
     {
