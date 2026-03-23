@@ -5,6 +5,7 @@ public class CheckersAI
 {
     private Player aiPlayer;
     private int searchDepth;
+    public static Dictionary<char[], int> boardStorage = new Dictionary<char[], int>();
 
     public CheckersAI(Player aiPlayer, int depth)
     {
@@ -29,6 +30,16 @@ public class CheckersAI
                 bestMove = move;
             }
         }
+
+        foreach (Moves move in possibleMoves)
+        {
+            if(!move.Equals(bestMove))
+            {
+                Board newBoard = new Board(board);
+                newBoard.SimulateMove(move);
+                RemoveDictEntries(searchDepth - 1, newBoard, GetOpponent(aiPlayer));
+            }
+        }
         return bestMove;
     }
 
@@ -36,6 +47,12 @@ public class CheckersAI
     {
         List<Moves> possibleMoves = board.GetAllMoves(currentTurn);
         if (depth == 0 || possibleMoves.Count == 0) return EvaluateBoard(board);
+
+        //Dictionary Stuff
+        DictBoard check = new DictBoard(board);
+        if (boardStorage.ContainsKey(check.board))
+            return boardStorage[check.board];
+
         if (maximizingPlayer)
         {
             int maxEval = int.MinValue;
@@ -48,6 +65,7 @@ public class CheckersAI
                 alpha = Mathf.Max(alpha, eval);
                 if (beta <= alpha) break;
             }
+            boardStorage.Add(check.board, maxEval);  //Dictionary Stuff
             return maxEval;
         }
         else
@@ -62,6 +80,7 @@ public class CheckersAI
                 beta = Mathf.Min(beta, eval);
                 if (beta <= alpha) break;
             }
+            boardStorage.Add(check.board, minEval); //Dictionary Stuff
             return minEval;
         }
     }
@@ -98,5 +117,20 @@ public class CheckersAI
     private Player GetOpponent(Player player)
     {
         return player == Player.RED ? Player.BLUE : Player.RED;
+    }
+
+    public void RemoveDictEntries(int depth, Board board, Player currentTurn)
+    {
+        if (depth == 0) return;
+        List<Moves> possibleMoves = board.GetAllMoves(currentTurn);
+        foreach (Moves move in possibleMoves)
+        {
+            Board newBoard = new Board(board);
+            newBoard.SimulateMove(move);
+            RemoveDictEntries(depth - 1, newBoard, GetOpponent(currentTurn));
+        }
+        DictBoard dictentry = new DictBoard(board);
+        if (boardStorage.ContainsKey(dictentry.board))
+            boardStorage.Remove(dictentry.board);
     }
 }
