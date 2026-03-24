@@ -9,6 +9,7 @@ public static class Constants
 {
     public const string CLICK = "CLICK";
     public const string MOVE = "MOVE";
+    public const string AI_TURN = "AI_TURN";
     public const string FINISHED = "FINISHED";
     public const string NORMAL_PIECE = "NORMAL";
     public const string KING_PIECE = "KING";

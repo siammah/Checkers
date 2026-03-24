@@ -15,14 +15,16 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public delegate void UpdateMessage(Player player, string temp);
     public event UpdateMessage Message;
-
+    bool hasAIMoved = false;
+    int depth = 8;
+    CheckersAI AI;
     private void Awake()
     {
         if (instance == null) instance = this;
         else Destroy(gameObject);
         SpawnBlocks();
         myBoard = new Board();
-        gameState = Constants.CLICK;
+        gameState = Constants.AI_TURN;
         canMove = false;
         hasGameFinished = false;
         currentPlayer = Player.RED;
@@ -35,6 +37,8 @@ public class GameManager : MonoBehaviour
             pieceObject.GetComponent<SpriteRenderer>().color = pair.Key.player == Player.RED ? Color.red : Color.blue;
             pieceDictionary[pair.Key] = pieceObject;
         }
+
+        AI = new CheckersAI(Player.RED, depth);
     }
 
     void SpawnBlocks()
@@ -92,11 +96,6 @@ public class GameManager : MonoBehaviour
                                 pieceDictionary.Remove(currentMove.capturedPiece);
                             }
                             myBoard.UpdateMove(currentMove);
-                            if (currentMove.end.y == 7 && currentPlayer == Player.RED)
-                            {
-                                myBoard.UpgradePiece(clickedPiece);
-                                pieceDictionary[clickedPiece].transform.GetChild(0).gameObject.SetActive(true);
-                            }
                             if (currentMove.end.y == 0 && currentPlayer == Player.BLUE)
                             {
                                 myBoard.UpgradePiece(clickedPiece);
@@ -109,13 +108,53 @@ public class GameManager : MonoBehaviour
                                 Message(currentPlayer, Constants.CLICK);
                                 return;
                             }
-                            currentPlayer = currentPlayer == Player.RED ? Player.BLUE : Player.RED;
+                            currentPlayer = Player.RED;
+                            gameState = Constants.AI_TURN;
+                            hasAIMoved = false;
+
+                            
                             Message(currentPlayer, Constants.CLICK);
                             return;
                         }
                     }
                     break;
             }
+        }
+        if (gameState.Equals(Constants.AI_TURN) && !hasAIMoved)
+        {
+            hasAIMoved = true;
+            Moves bestMove = AI.GetBestMove(myBoard);
+            GamePiece key = new GamePiece(Player.RED, 100);
+            if (bestMove.start.x == 0 && bestMove.end.x == 0){
+                hasGameFinished = true;
+                return;
+            }
+            foreach (var g in myBoard.playerPositions)
+            {
+                if (g.Value.x == bestMove.start.x && g.Value.y == bestMove.start.y)
+                {
+                    key = g.Key;
+                    break;
+                }
+            }
+            if (bestMove.isCapture)
+            {
+                pieceDictionary[bestMove.capturedPiece].SetActive(false);
+                pieceDictionary.Remove(bestMove.capturedPiece);
+            }
+
+            myBoard.UpdateMove(bestMove);
+            pieceDictionary[key].transform.position = new Vector3(bestMove.end.x, -bestMove.end.y, -2f);
+
+            if (bestMove.end.y == 7 && currentPlayer == Player.RED) //BRING THIS TO AI SECTION LATER
+            {
+                myBoard.UpgradePiece(key);
+                pieceDictionary[key].transform.GetChild(0).gameObject.SetActive(true);
+            }
+
+            gameState = Constants.CLICK;
+            currentPlayer = Player.BLUE;
+            Message(currentPlayer, Constants.CLICK);
         }
     }
 

@@ -48,6 +48,7 @@ public class CheckersAI
         List<Moves> possibleMoves = board.GetAllMoves(currentTurn);
         if (depth == 0 || possibleMoves.Count == 0) return EvaluateBoard(board);
 
+
         //Dictionary Stuff
         DictBoard check = new DictBoard(board);
         if (boardStorage.ContainsKey(check.board))
@@ -92,8 +93,8 @@ public class CheckersAI
         {
             GamePiece piece = item.Key;
             Grid pos = item.Value;
-            int pieceValue = 3;
-            int kingValue = 9;
+            int pieceValue = 10;
+            int kingValue = 30;
             int value = piece.pieceType == Constants.KING_PIECE ? kingValue : pieceValue;
             int advancement = 0;
             if (piece.pieceType != Constants.KING_PIECE)
@@ -109,7 +110,7 @@ public class CheckersAI
             }
             int totalValue = value + advancement + centerBonus;
             if (piece.player == aiPlayer) score += totalValue;
-            else score -= totalValue;
+            else score -= 2 * totalValue;
         }
         return score;
     }
