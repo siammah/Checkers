@@ -89,29 +89,40 @@ public class CheckersAI
     private int EvaluateBoard(Board board)
     {
         int score = 0;
+
         foreach (var item in board.playerPositions)
         {
             GamePiece piece = item.Key;
             Grid pos = item.Value;
-            int pieceValue = 10;
-            int kingValue = 30;
+
+            int pieceValue = 12;
+            int kingValue = 20;
             int value = piece.pieceType == Constants.KING_PIECE ? kingValue : pieceValue;
+
             int advancement = 0;
             if (piece.pieceType != Constants.KING_PIECE)
             {
-                advancement = piece.player == Player.RED ? pos.y : 7 - pos.y;
+                int distToKing = piece.player == Player.RED ? (7 - pos.y) : pos.y;
+                advancement = (6 - distToKing);
             }
-            int centerBonus = 0;
-            if (piece.pieceType == Constants.KING_PIECE)
-            {
-                int distX = Mathf.Abs(pos.x - 3);
-                int distY = Mathf.Abs(pos.y - 3);
-                centerBonus = 6 - (distX + distY);
-            }
-            int totalValue = value + advancement + centerBonus;
-            if (piece.player == aiPlayer) score += totalValue;
-            else score -= 2 * totalValue;
+
+            int distX = Mathf.Abs(pos.x - 3);
+            int centerBonus = Mathf.Min(1, 3 - Mathf.Min(distX, 3));
+
+            int edgePenalty = (pos.x == 0 || pos.x == 7) ? -1 : 0;
+
+            int kingSafetyPenalty = 0;
+            if (piece.pieceType == Constants.KING_PIECE && (pos.y == 0 || pos.y == 7))
+                kingSafetyPenalty = -2;
+
+            int totalValue = value + advancement + centerBonus + edgePenalty + kingSafetyPenalty;
+
+            if (piece.player == aiPlayer)
+                score += totalValue;
+            else
+                score -= totalValue;
         }
+
         return score;
     }
 
