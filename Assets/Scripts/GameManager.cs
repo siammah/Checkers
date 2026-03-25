@@ -112,7 +112,7 @@ public class GameManager : MonoBehaviour
                             gameState = Constants.AI_TURN;
                             hasAIMoved = false;
 
-                            
+
                             Message(currentPlayer, Constants.CLICK);
                             return;
                         }
@@ -125,7 +125,8 @@ public class GameManager : MonoBehaviour
             hasAIMoved = true;
             Moves bestMove = AI.GetBestMove(myBoard);
             GamePiece key = new GamePiece(Player.RED, 100);
-            if (bestMove.start.x == 0 && bestMove.end.x == 0){
+            if (bestMove.start.x == 0 && bestMove.end.x == 0)
+            {
                 hasGameFinished = true;
                 return;
             }
@@ -143,7 +144,29 @@ public class GameManager : MonoBehaviour
                 pieceDictionary.Remove(bestMove.capturedPiece);
             }
 
-            myBoard.UpdateMove(bestMove);
+            List<Moves> futureCaptures = myBoard.GetAllMoves(Player.RED);
+            while (futureCaptures.Count != 0)
+            {
+                myBoard.UpdateMove(bestMove);
+                if (bestMove.isCapture)
+                {
+                    futureCaptures = myBoard.GetAllMoves(Player.RED);
+                    for (int i = futureCaptures.Count - 1; i >= 0; i--)
+                    {
+                        if (!futureCaptures[i].isCapture)
+                            futureCaptures.RemoveAt(i);
+                    }
+                    if (futureCaptures.Count > 0)
+                    {
+                        bestMove = futureCaptures[0];
+                        pieceDictionary[bestMove.capturedPiece].SetActive(false);
+                        pieceDictionary.Remove(bestMove.capturedPiece);
+                    }
+                }
+                else
+                    futureCaptures = new List<Moves>();
+            }
+
             pieceDictionary[key].transform.position = new Vector3(bestMove.end.x, -bestMove.end.y, -2f);
 
             if (bestMove.end.y == 7 && currentPlayer == Player.RED) //BRING THIS TO AI SECTION LATER
@@ -171,3 +194,4 @@ public class GameManager : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 }
+

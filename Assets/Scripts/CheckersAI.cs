@@ -33,7 +33,7 @@ public class CheckersAI
 
         foreach (Moves move in possibleMoves)
         {
-            if(!move.Equals(bestMove))
+            if (!move.Equals(bestMove))
             {
                 Board newBoard = new Board(board);
                 newBoard.SimulateMove(move);
@@ -61,6 +61,24 @@ public class CheckersAI
             {
                 Board newBoard = new Board(board);
                 newBoard.SimulateMove(move);
+
+                List<Moves> newPossibleMoves = newBoard.GetAllMoves(currentTurn);
+                for (int i = newPossibleMoves.Count - 1; i >= 0; i--)
+                {
+                    if (!newPossibleMoves[i].isCapture)
+                        newPossibleMoves.RemoveAt(i);
+                }
+                while (newPossibleMoves.Count > 0 && move.isCapture)
+                {
+                    newBoard.SimulateMove(newPossibleMoves[0]);
+                    newPossibleMoves = newBoard.GetAllMoves(currentTurn);
+                    for (int i = newPossibleMoves.Count - 1; i >= 0; i--)
+                    {
+                        if (!newPossibleMoves[i].isCapture)
+                            newPossibleMoves.RemoveAt(i);
+                    }
+                }
+
                 int eval = Minimax(newBoard, depth - 1, alpha, beta, false, GetOpponent(currentTurn));
                 maxEval = Mathf.Max(maxEval, eval);
                 alpha = Mathf.Max(alpha, eval);
@@ -146,3 +164,4 @@ public class CheckersAI
             boardStorage.Remove(dictentry.board);
     }
 }
+
